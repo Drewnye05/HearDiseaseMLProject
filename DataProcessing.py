@@ -4,6 +4,8 @@ import pandas as pd
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler,OneHotEncoder
 
+"""https://www.kaggle.com/datasets/redwankarimsony/heart-disease-data/data
+"""
 class DataPipeline:
     
     def __init__(self,filepath,targetColumn,test_size =.2,random_state = 42):
