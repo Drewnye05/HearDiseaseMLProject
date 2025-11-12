@@ -1,4 +1,6 @@
 # Keras imports 
+from keras.utils import set_random_seed
+import keras.initializers
 from keras.models import Sequential
 from keras.layers import Dense,BatchNormalization,Dropout
 from keras.callbacks import EarlyStopping
@@ -13,6 +15,7 @@ from sklearn.metrics import accuracy_score,f1_score
 # data handling file 
 import DataProcessing as dp
 
+SEED = set_random_seed(42)
 print('working on it...')
 # all of the data is being assigned here
 pipeLine = dp.DataPipeline('heart_disease_uci.csv','num',test_size=0.2)
@@ -87,11 +90,11 @@ def KerasMLP():
     mlpModel = Sequential()
     
     mlpModel.add(Dense(32,activation="swish",input_shape=(X_train.shape[1],),kernel_regularizer=l2(0.0001)))
-    mlpModel.add(BatchNormalization())
+    # mlpModel.add(BatchNormalization())
     mlpModel.add(Dropout(0.3))
 
     mlpModel.add(Dense(16,activation='relu',kernel_regularizer=l2(0.001)))
-    mlpModel.add(BatchNormalization())
+    # mlpModel.add(BatchNormalization())
     mlpModel.add(Dropout(0.2))
 
     mlpModel.add(Dense(1,activation='sigmoid'))
@@ -134,7 +137,14 @@ def KerasMLP():
 
     error_testing = round((1-test_accuracy)*100,2)
 
+    acc_gap = train_accuracy-test_accuracy
 
+    f1_gap=training_f1-testing_f1
+
+
+    print("="*75)
+
+    print("\nTraining results\n")
 
     print(f"Training accuracy: {train_accuracy*100}%")
 
@@ -142,11 +152,20 @@ def KerasMLP():
 
     print(f"Training F1 score: {training_f1*100}%")
 
+    print("\nShowing training results\n")
+
+
     print(f"Testing accuracy: {test_accuracy*100}%")
 
     print(f"Testing error rate {error_testing}%")
 
     print(f"Testing F1 score: {testing_f1*100}%")
 
-#KerasMLP()
+    print("\nshowing the gab between train and test\n")
+    print(f"Accuracy gap {acc_gap*100:.2f}")
+    print(f"F1 gap {f1_gap*100:.2f}")
+    print("="*75)
+
+
+KerasMLP()
 SklearnMLP()
