@@ -42,7 +42,7 @@ class DataPipeline:
         X = self.df.drop(columns=[self.targetColumn])
         y = self.df[self.targetColumn]
 
-        self.X_train,self.X_test,self.y_train,self.y_test = train_test_split(X,y,train_size=self.test_size,random_state=self.random_state)
+        self.X_train,self.X_test,self.y_train,self.y_test = train_test_split(X,y,test_size=self.test_size,random_state=self.random_state)
 
         return self 
     
