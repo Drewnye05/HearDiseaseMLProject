@@ -13,7 +13,7 @@ from keras.metrics import Accuracy
 # sklearn imports 
 from sklearn.model_selection import cross_val_score
 from sklearn.neural_network import MLPClassifier
-from sklearn.metrics import accuracy_score,f1_score
+from sklearn.metrics import accuracy_score,f1_score,confusion_matrix,ConfusionMatrixDisplay
 # data handling file 
 import DataProcessing as dp
 #plotting imports 
@@ -170,57 +170,61 @@ def tunerSearch():
     
     return tuner
 
-def plot_metrics(history, f1_history):
-
+def plot_all_metrics(history, f1_history, y_true, y_pred, model_name="MLP Model"):
+    """
+    Plots Accuracy, F1 Score, and the Confusion Matrix in a single figure.
+    """
     epochs = range(1, len(history.history['accuracy']) + 1)
-    fig, ax = plt.subplots(1, 2, figsize=(14, 5))
+    
+    # Create a figure with a 1x3 grid for the plots
+    fig, ax = plt.subplots(1, 3, figsize=(18, 6)) # Increased width to accommodate 3 plots
 
-    # Accuracy Curves
+    # --- Plot 1: Accuracy Curves ---
     ax[0].plot(epochs, history.history['accuracy'], label="Train Acc", linewidth=2)
     ax[0].plot(epochs, history.history['val_accuracy'], label="Val Acc", linewidth=2)
-    ax[0].set_title("Accuracy Over Epochs", fontsize=14)
+    ax[0].set_title(f"{model_name} Accuracy Over Epochs", fontsize=12)
     ax[0].set_xlabel("Epoch")
     ax[0].set_ylabel("Accuracy")
     ax[0].legend()
     ax[0].grid(True, alpha=0.3)
 
-    # F1 Curves
+    # --- Plot 2: F1 Curves ---
     ax[1].plot(epochs, f1_history.f1_scores, label="Train F1", linewidth=2)
     ax[1].plot(epochs, f1_history.val_f1_scores, label="Val F1", linewidth=2)
-    ax[1].set_title("F1 Score Over Epochs", fontsize=14)
+    ax[1].set_title(f"{model_name} F1 Score Over Epochs", fontsize=12)
     ax[1].set_xlabel("Epoch")
     ax[1].set_ylabel("F1 Score")
     ax[1].set_ylim([0, 1])
     ax[1].legend()
     ax[1].grid(True, alpha=0.3)
 
+    # --- Plot 3: Confusion Matrix ---
+    cm = confusion_matrix(y_true, y_pred)
+    disp = ConfusionMatrixDisplay(
+        confusion_matrix=cm, 
+        display_labels=["No Disease (0)", "Disease (1)"]
+    )
+    
+    disp.plot(cmap=plt.cm.Blues, ax=ax[2], values_format='d', colorbar=False)
+    ax[2].set_title("Test Set Confusion Matrix", fontsize=12)
+    
     plt.tight_layout()
     plt.show()
+
 
 def KerasMLP():
     mlpModel = Sequential()
 
     mlpModel.add(Input(shape=(X_train.shape[1],)))
     
-    # mlpModel.add(Dense(128,activation="swish",kernel_regularizer=l2(0.001)))
-    # mlpModel.add(BatchNormalization())
-    # mlpModel.add(Dropout(0.30000000000000004))
-
-    # mlpModel.add(Dense(64,activation='swish',kernel_regularizer=l2(0.001)))
-    # mlpModel.add(BatchNormalization())
-    # mlpModel.add(Dropout(0.1))
-
-    # mlpModel.add(Dense(1,activation='sigmoid'))
-
-    # mlpModel.compile(
-    #     optimizer= Adam(0.005),
-    #     loss='binary_crossentropy',
-    #     metrics=['accuracy']
     mlpModel.add(Dense(64, activation="relu", kernel_regularizer=l2(0.001)))
     mlpModel.add(Dropout(0.2))
+
     mlpModel.add(Dense(24, activation="relu", kernel_regularizer=l2(0.0005)))
     mlpModel.add(Dropout(0.30000000000000004))
+
     mlpModel.add(Dense(1, activation="sigmoid"))
+
     mlpModel.compile(
         optimizer=Adam(0.00031761637960126866),
         loss="binary_crossentropy",
@@ -269,7 +273,13 @@ def KerasMLP():
     print(f"F1 gap {f1_gap * 100:.2f}%")
     print("=" * 75)
 
-    plot_metrics(history, f1_callback)
+    plot_all_metrics(
+        history, 
+        f1_callback, 
+        y_test, 
+        y_predict_test, 
+        model_name="Heart Disease MLP"
+    ) 
     
     return mlpModel
 
