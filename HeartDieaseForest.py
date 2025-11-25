@@ -1,13 +1,15 @@
 #imports
 import DataProcessing as dp
-#data 
+#data
+import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
+import seaborn as sns
 #sklearn
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.model_selection import GridSearchCV
 from sklearn.metrics import accuracy_score, f1_score, confusion_matrix, classification_report
-
+from sklearn.metrics import precision_recall_curve
 
 # get data
 pipeLine = dp.DataPipeline('heart_disease_uci.csv','num',test_size=0.2)
@@ -17,23 +19,7 @@ pipeLine.run(binary = True)
 feature_names = list(pipeLine.df.drop(columns=["num"]).columns)
 
 X_train, X_test, y_train, y_test = pipeLine.getData()
-
-
-
-def rf_sklean(): 
-    rf = RandomForestClassifier(
-        n_estimators=100,     # trees
-        random_state = 42,      # seed
-        n_jobs=-1             # speeds up processing 
-    )
-    # train
-    rf.fit(X_train, y_train)
-    #pred
-    y_pred = rf.predict(X_test)
-    #accuracy
-    print("Accuracy:", accuracy_score(y_test, y_pred))
  
-
 def rf_grid_search():
     print("Starting Random Forest....\nShould take A few minuets....")
     #init
@@ -47,7 +33,8 @@ def rf_grid_search():
         "min_samples_split": [2, 5, 10],           # higher values prevent overfitting
         "min_samples_leaf": [1, 2, 4],             
         "max_features": ["sqrt", "log2", None],    # feature sampling strategy
-        "bootstrap": [True, False]                 # bootstrap methods
+        "bootstrap": [True],
+        "class_weight": ["balanced"]
     }
 
 
@@ -56,8 +43,8 @@ def rf_grid_search():
         estimator=rf,
         param_grid=grid,
         cv=5,             # 5-K CV
-        scoring="accuracy",
-        verbose=1,        # show progress (optional)
+        scoring="f1",
+        verbose=1,        
         n_jobs=-1
     )
 
@@ -66,7 +53,7 @@ def rf_grid_search():
 
     # Scores
     print("Best Hyperparameters:", GS.best_params_)
-    print(f"Best Cross-Val Accuracy:{GS.best_score_:.2f}")
+    print(f"Best Cross-Val F1 Score:{GS.best_score_:.2f}")
 
     # Evaluate on test dataset
     best_model = GS.best_estimator_
@@ -78,10 +65,6 @@ def rf_grid_search():
     print("Classification Report\n", classification_report(y_test,y_pred))
 
     return best_model
-
-best_rf_model = rf_grid_search()
-print("Generating Feautre Importance Plot...")
-
 
 def plot_feature_importance(model,features):
     
@@ -96,4 +79,59 @@ def plot_feature_importance(model,features):
     plt.tight_layout()
     plt.show()
 
+#first train
+best_rf_model = rf_grid_search()
+print("Generating Feautre Importance Plot...")
 plot_feature_importance(best_rf_model,feature_names)
+
+
+
+
+print("\n FEATURE IMPORTANCE RANKING ")
+importance_df = pd.DataFrame({
+    "feature": feature_names,
+    "importance": best_rf_model.feature_importances_
+}).sort_values(by="importance", ascending=True)
+
+print(importance_df)
+
+print("Dropping all features below .01")
+
+threshold = 0.01
+low_features = importance_df[importance_df["importance"] < threshold]["feature"].tolist()
+
+print("\nDropping low-importance features:", low_features)
+
+pipeLine.df = pipeLine.df.drop(columns=low_features, errors="ignore")
+
+# Rebuild feature list and train/test data
+feature_names = list(pipeLine.df.drop(columns=["num"]).columns)
+X_train, X_test, y_train, y_test = pipeLine.getData()
+
+print("\n RETRAINING MODEL WITH REDUCED FEATURES")
+best_rf_model = rf_grid_search()
+
+
+cm = confusion_matrix(y_test, best_rf_model.predict(X_test))
+
+print("Confusion Matrix")   
+
+plt.figure(figsize=(6,4))
+sns.heatmap(cm, annot=True, fmt='d', cmap='Blues')
+plt.title("Confusion Matrix (Reduced Feature Model)")
+plt.xlabel("Predicted")
+plt.ylabel("Actual")
+plt.show()
+
+
+y_prob = best_rf_model.predict_proba(X_test)[:, 1]
+precision, recall, thresholds = precision_recall_curve(y_test, y_prob)
+
+plt.figure(figsize=(6,4))
+plt.plot(recall, precision, label="PR Curve")
+plt.title("Precision–Recall Curve")
+plt.xlabel("Recall")
+plt.ylabel("Precision")
+plt.show()
+
+
