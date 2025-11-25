@@ -33,6 +33,23 @@ params = {'n_neighbors': [3, 5, 7, 9, 11,],'weights': ['uniform', 'distance'],'m
 grid = GridSearchCV(KNeighborsClassifier(), params, cv=5, n_jobs=-1)
 grid.fit(X_train, y_train)
 
+results = grid.cv_results_
+mean_scores = results['mean_test_score']
+best_running = []
+current_best = -1
+
+for score in mean_scores:
+    current_best = max(current_best, score)
+    best_running.append(current_best)
+
+plt.figure(figsize=(8, 5))
+plt.plot(range(1, len(best_running) + 1), best_running, marker='o')
+plt.xlabel("Iteration")
+plt.ylabel("Best CV Score So Far")
+plt.title("Grid Search Convergence")
+plt.grid(True)
+plt.show()
+
 print("Best parameters:", grid.best_params_)
 print("Best cross-validation score:", grid.best_score_)
 
