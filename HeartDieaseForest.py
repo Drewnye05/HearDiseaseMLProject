@@ -23,11 +23,13 @@ pipeLine.run(binary = True)
 
 X_train, X_test, y_train, y_test = pipeLine.getData()
 feature_names = pipeLine.df.drop(columns=["num", "id"]).columns.tolist()
-print(len(feature_names), len(X_train[0]))
+#print(len(feature_names), len(X_train[0]))
+
+
 
 
 def rf_grid_search():
-    print("Starting Random Forest....\nShould take A few minuets....")
+    print("STARTING RANDOM FOREST.......................\nShould take A few minuets........")
     #init
     rf = RandomForestClassifier(random_state=42, n_jobs=-1)
 
@@ -104,7 +106,7 @@ print(importance_df)
 
 print("Dropping all features below .01")
 
-threshold = 0.01
+threshold = 0.02
 low_features = importance_df[importance_df["importance"] < threshold]["feature"].tolist()
 
 print("\nDropping low-importance features:", low_features)
@@ -123,7 +125,7 @@ best_rf_model = rf_grid_search()
 
 cm = confusion_matrix(y_test, best_rf_model.predict(X_test))
 
-print("Confusion Matrix")   
+ 
 
 plt.figure(figsize=(6,4))
 sns.heatmap(cm, annot=True, fmt='d', cmap='Blues')
