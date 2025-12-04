@@ -15,13 +15,21 @@ from sklearn.metrics import precision_recall_curve
 pipeLine = dp.DataPipeline('heart_disease_uci.csv','num',test_size=0.2)
 pipeLine.run(binary = True)
 
+
 #get features from pipeline
-feature_names = list(pipeLine.df.drop(columns=["num"]).columns)
+#feature_names = list(pipeLine.df.drop(columns=["num"]).columns)
+
+
 
 X_train, X_test, y_train, y_test = pipeLine.getData()
- 
+feature_names = pipeLine.df.drop(columns=["num", "id"]).columns.tolist()
+#print(len(feature_names), len(X_train[0]))
+
+
+
+
 def rf_grid_search():
-    print("Starting Random Forest....\nShould take A few minuets....")
+    print("STARTING RANDOM FOREST.......................\nShould take A few minuets........")
     #init
     rf = RandomForestClassifier(random_state=42, n_jobs=-1)
 
@@ -81,13 +89,14 @@ def plot_feature_importance(model,features):
 
 #first train
 best_rf_model = rf_grid_search()
+print(len(feature_names), len(best_rf_model.feature_importances_))
 print("Generating Feautre Importance Plot...")
 plot_feature_importance(best_rf_model,feature_names)
 
 
 
 
-print("\n FEATURE IMPORTANCE RANKING ")
+print("\n===== FEATURE IMPORTANCE RANKING =====")
 importance_df = pd.DataFrame({
     "feature": feature_names,
     "importance": best_rf_model.feature_importances_
@@ -97,7 +106,7 @@ print(importance_df)
 
 print("Dropping all features below .01")
 
-threshold = 0.01
+threshold = 0.02
 low_features = importance_df[importance_df["importance"] < threshold]["feature"].tolist()
 
 print("\nDropping low-importance features:", low_features)
@@ -105,16 +114,18 @@ print("\nDropping low-importance features:", low_features)
 pipeLine.df = pipeLine.df.drop(columns=low_features, errors="ignore")
 
 # Rebuild feature list and train/test data
-feature_names = list(pipeLine.df.drop(columns=["num"]).columns)
+#feature_names = list(pipeLine.df.drop(columns=["num"]).columns)
 X_train, X_test, y_train, y_test = pipeLine.getData()
+feature_names = pipeLine.df.drop(columns=["num", "id"]).columns.tolist()
 
-print("\n RETRAINING MODEL WITH REDUCED FEATURES")
+
+print("\n========== RETRAINING MODEL WITH REDUCED FEATURES ==========")
 best_rf_model = rf_grid_search()
 
 
 cm = confusion_matrix(y_test, best_rf_model.predict(X_test))
 
-print("Confusion Matrix")   
+ 
 
 plt.figure(figsize=(6,4))
 sns.heatmap(cm, annot=True, fmt='d', cmap='Blues')
