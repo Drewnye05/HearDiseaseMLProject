@@ -34,6 +34,8 @@ class DataPipeline:
         # **FIX 1: Drop the non-predictive 'dataset' column BEFORE encoding**
         if 'dataset' in self.df.columns:
             self.df = self.df.drop(columns=['dataset'])
+        if 'id' in self.df.columns:
+            self.df = self.df.drop(columns=['id'])
 
         if binary:
             self.df[self.targetColumn]=(self.df[self.targetColumn]> 0).astype(int)
@@ -46,7 +48,7 @@ class DataPipeline:
     def splitData(self):
         # **FIX 2: Remove the incorrect/redundant 'cols_to_drop' line**
         # 'dataset' is already dropped. We only need to drop the target and 'id'.
-        X = self.df.drop(columns=[self.targetColumn, 'id'])
+        X = self.df.drop(columns=[self.targetColumn])
         y = self.df[self.targetColumn]
 
         self.X_train,self.X_test,self.y_train,self.y_test = train_test_split(X,y,test_size=self.test_size,random_state=self.random_state)

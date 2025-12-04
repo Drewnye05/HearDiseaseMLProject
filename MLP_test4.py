@@ -9,7 +9,7 @@ from keras.callbacks import EarlyStopping,Callback
 from keras.optimizers import Adam
 from keras.regularizers import l1,l2
 import keras_tuner as kt
-from keras.metrics import Accuracy
+from keras.metrics import Accuracy, Recall
 # sklearn imports 
 from sklearn.model_selection import cross_val_score
 from sklearn.neural_network import MLPClassifier
@@ -17,7 +17,7 @@ from sklearn.metrics import accuracy_score,f1_score,confusion_matrix,ConfusionMa
 from sklearn.utils import resample
 # data handling file 
 # import DataProcessing as dp
-import MLPdataPipeline as dp
+import MLPdataPipeline as dp 
 #plotting imports 
 import matplotlib.pyplot as plt
 import numpy as np 
@@ -96,7 +96,7 @@ def build_model(hp: kt.HyperParameters):
     model.add(Dense(
         hp_units1, 
         activation="relu",
-        kernel_regularizer=l2(hp.Choice("l2_1", [1e-4, 5e-4, 1e-3,5e-3]))
+        kernel_regularizer=l2(hp.Choice("l2_1", [1e-4, 5e-4, 1e-3]))
     ))
     # model.add(BatchNormalization())
     model.add(Dropout(hp.Float("drop1", min_value=.2, max_value=0.5, step=0.1)))
@@ -106,7 +106,7 @@ def build_model(hp: kt.HyperParameters):
     model.add(Dense(
         hp_units2,
         activation="relu",
-        kernel_regularizer=l2(hp.Choice("l2_2", [1e-4, 5e-4, 1e-3,5e-3]))
+        kernel_regularizer=l2(hp.Choice("l2_2", [1e-4, 5e-4, 1e-3]))
     ))
     # model.add(BatchNormalization())
     model.add(Dropout(hp.Float("drop2", min_value=0.2, max_value=0.5, step=0.1)))
@@ -180,7 +180,7 @@ def tunerSearch():
         callbacks=[
             EarlyStopping(monitor="val_loss", patience=8, restore_best_weights=True)
         ],
-        verbose=1
+        verbose=0
     )
     
     # Get best hyperparameters
@@ -247,7 +247,7 @@ def KerasMLP():
 
     mlpModel.add(Input(shape=(X_train.shape[1],)))
     
-    mlpModel.add(Dense(64, activation="relu", kernel_regularizer=l2(0.005)))
+    mlpModel.add(Dense(64, activation="relu", kernel_regularizer=l2(0.001)))
     mlpModel.add(Dropout(0.2))
 
     mlpModel.add(Dense(24, activation="relu", kernel_regularizer=l2(0.0005)))
@@ -258,12 +258,13 @@ def KerasMLP():
     mlpModel.compile(
         optimizer=Adam(0.00031761637960126866),
         loss="binary_crossentropy",
-        metrics=["accuracy"]
+        metrics=["accuracy",keras.metrics.Recall(name='recall')]
     )
 
     early_stop = EarlyStopping(
-        monitor='val_loss',
-        patience=5,
+        monitor='val_recall',
+        mode= 'max',
+        patience=10,
         restore_best_weights=True
     )
     f1_callback = F1History(X_train, y_train, X_test, y_test)
@@ -326,6 +327,20 @@ def KerasMLP():
     print("=" * 75)
 
 
+    # print("=" * 75)
+    # print("\nTraining results\n")
+    # print(f"Training accuracy: {train_accuracy * 100}%")
+    # print(f"Training error {error_training}%")
+    # print(f"Training F1 score: {training_f1 * 100}%")
+    # print("\nTesting results\n")
+    # print(f"Testing accuracy: {test_accuracy * 100}%")
+    # print(f"Testing error rate {error_testing}%")
+    # print(f"Testing F1 score: {testing_f1 * 100}%")
+    # print("\nShowing the gap between train and test\n")
+    # print(f"Accuracy gap {acc_gap * 100:.2f}%")
+    # print(f"F1 gap {f1_gap * 100:.2f}%")
+    # print("=" * 75)
+
     plot_all_metrics(
         history, 
         f1_callback, 
@@ -338,7 +353,7 @@ def KerasMLP():
 
 # Run the baseline model
 if __name__ == "__main__":
-    # print("Running baseline MLP model...")
+    print("Running baseline MLP model...")
     model = KerasMLP()
     
     # Uncomment below to run hyperparameter tuning

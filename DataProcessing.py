@@ -59,4 +59,4 @@ class DataPipeline:
         print(self.df['num'].value_counts())
         return self
     def getData(self):
-        return self.X_train, self.X_test, self.y_train, self.y_test
+        return self.X_train, self.X_test, self.y_train.values, self.y_test.values
