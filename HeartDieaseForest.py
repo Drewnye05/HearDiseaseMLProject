@@ -71,6 +71,8 @@ def rf_grid_search():
     print(f"F1 Score: {f1_score(y_test, y_pred):.2f}")
     print("Confusion Matrix:\n", confusion_matrix(y_test, y_pred))
     print("Classification Report\n", classification_report(y_test,y_pred))
+    f1_macro = f1_score(y_test, y_pred, average='macro')
+    print(f"Averaged F1:{f1_macro}")  
 
     return best_model
 
@@ -89,7 +91,7 @@ def plot_feature_importance(model,features):
 
 #first train
 best_rf_model = rf_grid_search()
-print(len(feature_names), len(best_rf_model.feature_importances_))
+#print(len(feature_names), len(best_rf_model.feature_importances_))
 print("Generating Feautre Importance Plot...")
 plot_feature_importance(best_rf_model,feature_names)
 
@@ -104,7 +106,7 @@ importance_df = pd.DataFrame({
 
 print(importance_df)
 
-print("Dropping all features below .01")
+print("Dropping all features below .02")
 
 threshold = 0.02
 low_features = importance_df[importance_df["importance"] < threshold]["feature"].tolist()
@@ -137,6 +139,7 @@ plt.show()
 
 y_prob = best_rf_model.predict_proba(X_test)[:, 1]
 precision, recall, thresholds = precision_recall_curve(y_test, y_prob)
+      
 
 plt.figure(figsize=(6,4))
 plt.plot(recall, precision, label="PR Curve")
@@ -144,5 +147,3 @@ plt.title("Precision–Recall Curve")
 plt.xlabel("Recall")
 plt.ylabel("Precision")
 plt.show()
-
-
