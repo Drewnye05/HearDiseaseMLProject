@@ -41,14 +41,11 @@ scaler = StandardScaler()
 X_train = scaler.fit_transform(X_train)
 X_test = scaler.transform(X_test)
 
-# --- Repeated STRATIFIED K-Fold for all CV ---
-# 5 folds, repeated 3 times = 15 train/val splits
 cv = RepeatedStratifiedKFold(
     n_splits=5,
     n_repeats=3,
     random_state=42
 )
-# ---------------------------------------------
 
 params = {
     'n_neighbors': [3, 5, 7, 8, 9, 10, 11, 12, 13],
@@ -82,7 +79,6 @@ print("Best cross-validation score:", grid.best_score_)
 
 optimal_knn = grid.best_estimator_
 
-# Use the SAME CV object for final CV
 final_cv_scores = cross_val_score(optimal_knn, X_train, y_train, cv=cv)
 print("Final Repeated Stratified CV Accuracy on training data (using best model):",
       final_cv_scores.mean())
@@ -95,18 +91,13 @@ report = classification_report(y_test, y_pred)
 print("Heart Disease KNN Model Accuracy: ", accuracy)
 print("\nClassification Report:\n", report)
 
-# ---- F1 scores to 6 decimal places ----
-# F1 for positive class (label 1)
 f1_pos = f1_score(y_test, y_pred, pos_label=1)
-# Macro F1 (average over both classes)
 f1_macro = f1_score(y_test, y_pred, average='macro')
-# Weighted F1 (supports-class-weighted average) – good "final" overall F1
 f1_weighted = f1_score(y_test, y_pred, average='weighted')
 
 print(f"F1 (class 1, positive): {f1_pos:.6f}")
 print(f"Macro F1: {f1_macro:.6f}")
 print(f"Weighted F1 (final F1 score): {f1_weighted:.6f}")
-# ---------------------------------------
 
 # print confusion matrix
 cm = confusion_matrix(y_test, y_pred)
@@ -158,3 +149,4 @@ plt.title('KNN Performance vs. k')
 plt.legend()
 plt.grid(True)
 plt.show()
+
