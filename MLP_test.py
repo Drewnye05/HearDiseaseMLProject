@@ -96,11 +96,11 @@ def build_model(hp: kt.HyperParameters):
     model.add(Input(shape=(X_train.shape[1],)))
     # Layer 1
     hp_units1 = hp.Int("units1", min_value=16, max_value=64, step=16)
-    model.add(Dense(hp_units1, activation="relu", kernel_regularizer=l2(hp.Choice("l2_1", [1e-4, 5e-4, 1e-3]))))
+    model.add(Dense(hp_units1, activation="relu", kernel_regularizer=l2(hp.Choice("l2_1", [1e-4, 5e-4, 1e-3,5e-3]))))
     model.add(Dropout(hp.Float("drop1", min_value=.2, max_value=0.5, step=0.1)))
     # Layer 2
     hp_units2 = hp.Int("units2", min_value=8, max_value=32, step=8)
-    model.add(Dense(hp_units2, activation="relu", kernel_regularizer=l2(hp.Choice("l2_2", [1e-4, 5e-4, 1e-3]))))
+    model.add(Dense(hp_units2, activation="relu", kernel_regularizer=l2(hp.Choice("l2_2", [1e-4, 5e-4, 1e-3,5e-3]))))
     model.add(Dropout(hp.Float("drop2", min_value=0.2, max_value=0.5, step=0.1)))
     # Output
     model.add(Dense(1, activation="sigmoid"))
@@ -109,7 +109,76 @@ def build_model(hp: kt.HyperParameters):
     batch_size = hp.Choice("batch_size", [16, 32, 64])
     model.batch_size = batch_size 
     return model
+def tunerSearch():
+    # Custom tuner to handle batch_size
+    class CustomTuner(kt.BayesianOptimization):
+        def run_trial(self, trial, *args, **kwargs):
 
+            trial.metrics.register('val_f1',direction = 'max')
+            # Get the model with batch_size stored
+            model = self.hypermodel.build(trial.hyperparameters)
+            batch_size = model.batch_size
+            kwargs['batch_size'] = batch_size
+
+            
+
+            history = model.fit(*args,**kwargs)
+
+            val_data = kwargs.get('validation_data')
+            if val_data:
+                X_val, y_val = val_data
+                y_pred = (model.predict(X_val, verbose=0) > 0.5).astype(int)
+                f1 = f1_score(y_val, y_pred)
+                trial.metrics.update("val_f1", f1)
+            
+                history.history['val_f1'] = [f1] * len(history.history['val_loss'])
+                trial.metrics.update("val_f1", f1)
+            
+            
+        
+            return history
+        
+    tuner = CustomTuner(
+        hypermodel=build_model,
+        objective=[
+            kt.Objective("val_accuracy", direction="max"),
+            kt.Objective('val_f1', direction='max')],
+        max_trials=50,
+        executions_per_trial=3,
+        directory="tuner_results",
+        project_name="heart_disease_mlp",
+        overwrite =True
+    )
+
+    print("searching best hyperparameters...")
+
+
+    tuner.search(
+        X_train, y_train,
+        validation_data = (X_test,y_test),
+        epochs=60,  # Can make this tunable by adding to build_model
+        callbacks=[
+            EarlyStopping(monitor="val_loss", patience=8, restore_best_weights=True)
+        ],
+        verbose=0
+    )
+    
+    # Get best hyperparameters
+    best_hps = tuner.get_best_hyperparameters(num_trials=1)[0]
+    best_trial = tuner.oracle.get_best_trials(num_trials=1)[0]
+    print("\nBest Hyperparameters:")
+    print(f"Units Layer 1: {best_hps.get('units1')}")
+    print(f"Units Layer 2: {best_hps.get('units2')}")
+    print(f"Dropout 1: {best_hps.get('drop1')}")
+    print(f"Dropout 2: {best_hps.get('drop2')}")
+    print(f"L2 regularization 1: {best_hps.get('l2_1')}")
+    print(f"L2 regularization 2: {best_hps.get('l2_2')}")
+    print(f"Learning rate: {best_hps.get('learning_rate')}")
+    print(f"Batch Size: {best_hps.get('batch_size')}")
+    print(f"Best Accuracy: {best_trial.metrics.get_last_value('val_accuracy')}")
+    print(f"Best F1: {best_trial.metrics.get_last_value('val_f1')}")
+    
+    return tuner
 # Simplified model builder for Cross-Validation (uses optimal HPs)
 def build_model_cv(input_dim):
     """ Builds the Keras MLP model with the optimal hyperparameters. """
@@ -117,12 +186,12 @@ def build_model_cv(input_dim):
     mlpModel.add(Input(shape=(input_dim,)))
     
     # Optimal Hyperparameters from Tuner:
-    mlpModel.add(Dense(64, activation="relu", kernel_regularizer=l2(0.001)))
+    mlpModel.add(Dense(64, activation="relu", kernel_regularizer=l2(0.005)))
     mlpModel.add(Dropout(0.2))
 
     mlpModel.add(Dense(24, activation="relu", kernel_regularizer=l2(0.0005)))
     # Note: 0.30000000000000004 is ~0.3
-    mlpModel.add(Dropout(0.30)) 
+    mlpModel.add(Dropout(0.3)) 
 
     mlpModel.add(Dense(1, activation="sigmoid"))
 
@@ -326,7 +395,7 @@ if __name__ == "__main__":
     # This provides a robust estimate of performance and variability.
     cross_val_mlp(X_full, y_full, n_splits=5) 
     
-    # 2. Train the final model on all data used for CV and test on the held-out set
+    # # 2. Train the final model on all data used for CV and test on the held-out set
     print("\nRunning final MLP model training on all available data...")
     model = KerasMLP()
     

@@ -106,7 +106,7 @@ def build_model(hp: kt.HyperParameters):
     model.add(Dense(
         hp_units1, 
         activation="relu",
-        kernel_regularizer=l2(hp.Choice("l2_1", [1e-4, 5e-4, 1e-3]))
+        kernel_regularizer=l2(hp.Choice("l2_1", [1e-4, 5e-4, 1e-3, 5e-3]))
     ))
     # model.add(BatchNormalization())
     model.add(Dropout(hp.Float("drop1", min_value=.2, max_value=0.5, step=0.1)))
@@ -116,7 +116,7 @@ def build_model(hp: kt.HyperParameters):
     model.add(Dense(
         hp_units2,
         activation="relu",
-        kernel_regularizer=l2(hp.Choice("l2_2", [1e-4, 5e-4, 1e-3]))
+        kernel_regularizer=l2(hp.Choice("l2_2", [1e-4, 5e-4, 1e-3, 5e-3]))
     ))
     # model.add(BatchNormalization())
     model.add(Dropout(hp.Float("drop2", min_value=0.2, max_value=0.5, step=0.1)))
@@ -374,7 +374,7 @@ def KerasMLP():
 
     mlpModel.add(Input(shape=(X_train.shape[1],)))
     
-    mlpModel.add(Dense(64, activation="relu", kernel_regularizer=l2(0.001)))
+    mlpModel.add(Dense(64, activation="relu", kernel_regularizer=l2(0.005)))
     mlpModel.add(Dropout(0.2))
 
     mlpModel.add(Dense(24, activation="relu", kernel_regularizer=l2(0.0005)))

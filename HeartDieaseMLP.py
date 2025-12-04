@@ -180,7 +180,7 @@ def tunerSearch():
         callbacks=[
             EarlyStopping(monitor="val_loss", patience=8, restore_best_weights=True)
         ],
-        verbose=1
+        verbose=0
     )
     
     # Get best hyperparameters
@@ -338,7 +338,7 @@ def KerasMLP():
 
 # Run the baseline model
 if __name__ == "__main__":
-    # print("Running baseline MLP model...")
+    print("Running baseline MLP model...")
     model = KerasMLP()
     
     # Uncomment below to run hyperparameter tuning

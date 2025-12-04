@@ -96,7 +96,7 @@ def build_model(hp: kt.HyperParameters):
     model.add(Dense(
         hp_units, 
         activation="relu",
-        kernel_regularizer=l2(hp.Choice("l2_reg", [1e-4, 5e-4, 1e-3]))
+        kernel_regularizer=l2(hp.Choice("l2_reg", [1e-4, 5e-4, 1e-3,5e-3]))
     ))
     model.add(Dropout(hp.Float("drop_rate", min_value=.2, max_value=0.5, step=0.1)))
 
@@ -126,7 +126,7 @@ def build_model_cv(input_dim):
     
     # Single Hidden Layer (PLACEHOLDER HPs: Update after running tunerSearch)
     # Recommended to use the best HPs found by the tuner.
-    mlpModel.add(Dense(64, activation="relu", kernel_regularizer=l2(0.001)))
+    mlpModel.add(Dense(64, activation="relu", kernel_regularizer=l2(0.005)))
     mlpModel.add(Dropout(0.2)) 
 
     mlpModel.add(Dense(1, activation="sigmoid"))
@@ -178,7 +178,7 @@ def tunerSearch():
         callbacks=[
             EarlyStopping(monitor="val_loss", patience=8, restore_best_weights=True)
         ],
-        verbose=1
+        verbose=0
     )
     
     best_hps = tuner.get_best_hyperparameters(num_trials=1)[0]
@@ -399,14 +399,16 @@ if __name__ == "__main__":
     # Run the tuner to find the optimal hyperparameters for the new single-layer model.
     # The tunerSearch() function is UNCOMMENTED below and will run first.
     # After it finishes, it will print the best HPs. Use those to update build_model_cv.
-    # print("\nStarting hyperparameter tuning (Single Layer Model)...")
-    # tuner = tunerSearch() 
+    # 
 
     # 1. Run Cross-Validation on the full training data (X_full, y_full)
     # This will use the PLACEHOLDER HPs until you update build_model_cv.
     print("\n--- Running Cross-Validation ---")
     cross_val_mlp(X_full, y_full, n_splits=5) 
     
-    # 2. Train the final model on all data used for CV and test on the held-out set
-    print("\n--- Running final MLP model training on all available data ---")
+    # # 2. Train the final model on all data used for CV and test on the held-out set
+    # print("\n--- Running final MLP model training on all available data ---")
     model = KerasMLP()
+
+    # print("\nStarting hyperparameter tuning (Single Layer Model)...")
+    # tuner = tunerSearch() 
