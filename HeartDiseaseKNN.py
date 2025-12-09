@@ -99,7 +99,6 @@ print(f"F1 (class 1, positive): {f1_pos:.6f}")
 print(f"Macro F1: {f1_macro:.6f}")
 print(f"Weighted F1 (final F1 score): {f1_weighted:.6f}")
 
-# print confusion matrix
 cm = confusion_matrix(y_test, y_pred)
 plt.figure(figsize=(5, 4))
 sns.heatmap(cm, annot=True, fmt='d', cmap='Blues', cbar=False)
