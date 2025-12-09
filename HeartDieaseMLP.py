@@ -326,13 +326,13 @@ def KerasMLP():
     print("=" * 75)
 
 
-    plot_all_metrics(
-        history, 
-        f1_callback, 
-        y_test, 
-        y_predict_test, 
-        model_name="Heart Disease MLP"
-    ) 
+    # plot_all_metrics(
+    #     history, 
+    #     f1_callback, 
+    #     y_test, 
+    #     y_predict_test, 
+    #     model_name="Heart Disease MLP"
+    # ) 
     
     return mlpModel
 
