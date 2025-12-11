@@ -72,7 +72,7 @@ plt.xlabel("Iteration")
 plt.ylabel("Best CV Score So Far")
 plt.title("Grid Search Convergence")
 plt.grid(True)
-plt.show()
+# plt.show()
 
 print("Best parameters:", grid.best_params_)
 print("Best cross-validation score:", grid.best_score_)
@@ -105,7 +105,7 @@ sns.heatmap(cm, annot=True, fmt='d', cmap='Blues', cbar=False)
 plt.xlabel('Predicted')
 plt.ylabel('Actual')
 plt.title('KNN Confusion Matrix')
-plt.show()
+# plt.show()
 
 perm_result = permutation_importance(
     optimal_knn,
@@ -126,7 +126,7 @@ plt.yticks(range(len(indices)), np.array(feature_names)[indices])
 plt.xlabel("Mean decrease in accuracy")
 plt.title("Permutation Feature Importance (KNN)")
 plt.tight_layout()
-plt.show()
+# plt.show()
 
 k_values = range(1, 26)
 accuracies = []
@@ -147,5 +147,5 @@ plt.ylabel('Score')
 plt.title('KNN Performance vs. k')
 plt.legend()
 plt.grid(True)
-plt.show()
+# plt.show()
 

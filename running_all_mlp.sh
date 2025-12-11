@@ -6,9 +6,18 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 # Define the Python executable
 PYTHON_EXEC="$SCRIPT_DIR/tf_env/bin/python"
 
+
 echo "--- Starting MLP Iteration Sequence ---"
 echo "Script directory: $SCRIPT_DIR"
 echo "Python executable: $PYTHON_EXEC"
+echo " "
+
+echo "Running KNN Classifier"
+$PYTHON_EXEC "$SCRIPT_DIR/HeartDiseaseKNN.py"
+echo " "
+
+echo "Running Random Forest Classifier"
+$PYTHON_EXEC "$SCRIPT_DIR/HeartDieaseForest.py"
 echo " "
 
 # --- Iteration 1: Baseline MLP (Two Hidden Layers) ---
@@ -47,3 +56,4 @@ $PYTHON_EXEC "$SCRIPT_DIR/MLP_Test6_oneHiddenlayer.py"
 echo " "
 
 echo "--- All MLP iterations complete! ---"
+
